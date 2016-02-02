@@ -3,6 +3,7 @@
 #include <object.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include "interp.h"
 #include "lexer.h"
@@ -76,6 +77,11 @@ long interp_id(Interpreter* self)
 	
 	const char* name = t.u1.id->buffer;
 
+	if(strcmp(name, "exit") == 0) {
+		/* TODO Use setjmp here and signal a return to event loop branch */
+		exit(EXIT_SUCCESS);	
+	}
+
 	Object* value = mapSearch(self->symtab, name);
 
 	if(!value) {
@@ -119,7 +125,12 @@ long interp_term(Interpreter* self)
 			result = result * interp_factor(self);
 		} else if(t.type == T_DIV) {
 			interp_eat(self, T_DIV);
-			result = result / interp_factor(self);
+			long dividend = interp_factor(self);
+			if(dividend == 0) {
+				interp_error(self, E_WARNING, "Divison by zero is undefined");	
+				return 0;
+			}
+			result = result / dividend;
 		}
 	}
 

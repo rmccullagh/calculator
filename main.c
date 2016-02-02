@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <setjmp.h>
 
 #include "interp.h"
 #include "lexer.h"
+
+jmp_buf main_loop;
 
 static int raw_input(const char* prompt, char* buffer, size_t buffer_size)
 {
@@ -36,7 +39,6 @@ int main(int argc, char** argv)
 
 	while(1) {
 		char buffer[80];
-
 		size_t bytes_read = raw_input("calc> ", buffer, sizeof(buffer));
 		if(!bytes_read) {
 			printf("\n");
@@ -53,4 +55,3 @@ int main(int argc, char** argv)
 	
 	return 0;
 }
-
