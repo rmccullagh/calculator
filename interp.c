@@ -125,12 +125,12 @@ long interp_term(Interpreter* self)
 			result = result * interp_factor(self);
 		} else if(t.type == T_DIV) {
 			interp_eat(self, T_DIV);
-			long dividend = interp_factor(self);
-			if(dividend == 0) {
+			long divisor = interp_factor(self);
+			if(divisor == 0) {
 				interp_error(self, E_WARNING, "Divison by zero is undefined");	
 				return 0;
 			}
-			result = result / dividend;
+			result = result / divisor;
 		}
 	}
 
