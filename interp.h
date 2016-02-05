@@ -21,7 +21,7 @@ typedef struct {
 } Interpreter;
 
 typedef enum InterpreterError {
-	E_FATAL, E_NOTICE, E_WARNING, E_NO_ERROR
+	E_FATAL, E_NOTICE, E_WARNING, E_NO_ERROR, E_EOF
 } InterpreterError;
 
 extern void interp_init(Interpreter* self, Lexer* l);

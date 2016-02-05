@@ -30,6 +30,22 @@ static int raw_input(const char* prompt, char* buffer, size_t buffer_size)
 	}
 
 	buffer[i] = '\0';
+
+
+	if(c == EOF) {
+		cg.cg_exception_status = E_EOF;
+		if(cg.cg_exception_message == NULL) {
+			cg.cg_exception_message = malloc(sizeof("End of file"));
+			memcpy(cg.cg_exception_message, "End of file", sizeof("End of file"));
+		} else {
+			free(cg.cg_exception_message);
+			cg.cg_exception_message = NULL;
+			cg.cg_exception_message = malloc(sizeof("End of file"));
+			memcpy(cg.cg_exception_message, "End of file", sizeof("End of file"));
+		}
+
+		longjmp(cg.cg_state, 1);
+	}
 	
 	return i;
 }
@@ -56,6 +72,9 @@ int main(int argc, char** argv)
 				fprintf(stderr, "%s\n", cg.cg_exception_message);
 				return 0;
 			break;
+			case E_EOF:
+				fprintf(stderr, "\n%s\n", cg.cg_exception_message);
+				return 0;
 			default :
 				fprintf(stderr, "%s\n", cg.cg_exception_message);
 			break;	
