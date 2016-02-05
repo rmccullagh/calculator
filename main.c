@@ -85,7 +85,6 @@ int main(int argc, char** argv)
 			char buffer[80];
 			size_t bytes_read = raw_input("calc> ", buffer, sizeof(buffer));
 			if(!bytes_read) {
-				printf("\n");
 				continue;
 			} else {	
 				Lexer lex;
