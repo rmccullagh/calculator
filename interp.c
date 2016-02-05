@@ -78,7 +78,15 @@ long interp_id(Interpreter* self)
 	const char* name = t.u1.id->buffer;
 
 	if(strcmp(name, "exit") == 0) {
-		cg.cg_exception_message = "Success";
+		if(cg.cg_exception_message == NULL) {
+			cg.cg_exception_message = malloc(sizeof("Success"));
+			memcpy(cg.cg_exception_message, "Success", sizeof("Success"));
+		} else {
+			free(cg.cg_exception_message);
+			cg.cg_exception_message = NULL;
+			cg.cg_exception_message = malloc(sizeof("Success"));
+			memcpy(cg.cg_exception_message, "Success", sizeof("Success"));
+		}
 		cg.cg_exception_status = E_NO_ERROR;
 		longjmp(cg.cg_state, 1);
 	}

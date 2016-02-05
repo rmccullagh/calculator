@@ -57,6 +57,8 @@ int main(int argc, char** argv)
 	Event_Loop:
 
 	if(setjmp(cg.cg_state)) {
+		int retval;
+
 		switch(cg.cg_exception_status) {
 			case E_NOTICE:
 				fprintf(stderr, "Notice: %s\n", cg.cg_exception_message);
@@ -66,20 +68,32 @@ int main(int argc, char** argv)
 			break;
 			case E_FATAL:
 				fprintf(stderr, "Fatal: %s\n", cg.cg_exception_message);
-				return 1;
+				retval = 1;
+				goto Safe_Exit;
 			break;
 			case E_NO_ERROR:
 				fprintf(stderr, "%s\n", cg.cg_exception_message);
-				return 0;
+				retval = 0;
+				goto Safe_Exit;
 			break;
 			case E_EOF:
 				fprintf(stderr, "\n%s\n", cg.cg_exception_message);
-				return 0;
+				retval = 0;
+				goto Safe_Exit;
 			default :
 				fprintf(stderr, "%s\n", cg.cg_exception_message);
 			break;	
 		}
+		
+		if(cg.cg_exception_message != NULL) {
+			free(cg.cg_exception_message);
+			cg.cg_exception_message = NULL;
+		}	
+		
 		goto Event_Loop;
+
+		Safe_Exit:
+			return retval;
 	} else {
 		while(1) {
 			char buffer[80];
