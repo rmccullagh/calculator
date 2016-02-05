@@ -3,9 +3,16 @@
 
 #include <object.h>
 #include <stdarg.h>
+#include <setjmp.h>
 
 #include "lexer.h"
 #include "token.h"
+
+typedef struct {
+	jmp_buf 	cg_state;
+	int 		cg_exception_status;
+	char		*cg_exception_message;
+} compiler_globals;
 
 typedef struct {
 	Lexer*  lexer;
@@ -14,7 +21,7 @@ typedef struct {
 } Interpreter;
 
 typedef enum InterpreterError {
-	E_FATAL, E_NOTICE, E_WARNING
+	E_FATAL, E_NOTICE, E_WARNING, E_NO_ERROR
 } InterpreterError;
 
 extern void interp_init(Interpreter* self, Lexer* l);

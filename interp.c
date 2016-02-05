@@ -4,9 +4,12 @@
 #include <limits.h>
 #include <stdarg.h>
 #include <string.h>
+#include <setjmp.h>
 
 #include "interp.h"
 #include "lexer.h"
+
+extern compiler_globals cg;
 
 static void init_predefined_symbols(Interpreter* self)
 {
@@ -29,7 +32,6 @@ void interp_init(Interpreter* self, Lexer* lexer)
 	self->lexer = lexer;
 	self->symtab = newMap(1);
 	self->current_token = lexer_get_next_token(self->lexer);
-	
 	init_predefined_symbols(self);
 }
 
@@ -43,21 +45,19 @@ void interp_error(Interpreter* self, InterpreterError type, const char* format, 
 	n = vsnprintf(buffer, 1024, format, ap);
 	va_end(ap);
 
-	switch(type) {
-		case E_WARNING:
-			fprintf(stderr, "warning: %s\n", buffer);			
-		break;
-		case E_FATAL:
-			fprintf(stderr, "fatal error: %s\n", buffer);	
-			exit(1);		
-		break;
-		case E_NOTICE:
-			fprintf(stderr, "notice: %s\n", buffer);			
-		break;
-		default:
-			fprintf(stderr, "%s\n", buffer);			
-		break;
+	if(cg.cg_exception_message == NULL) {
+		cg.cg_exception_message = malloc(strlen(buffer) + 1);
+		memcpy(cg.cg_exception_message, buffer, strlen(buffer) + 1);
+	} else {
+		free(cg.cg_exception_message);
+		cg.cg_exception_message = NULL;
+		cg.cg_exception_message = malloc(strlen(buffer) + 1);
+		memcpy(cg.cg_exception_message, buffer, strlen(buffer) + 1);
 	}
+
+	cg.cg_exception_status = type;
+
+	longjmp(cg.cg_state, 1);
 }
 
 void interp_eat(Interpreter* self, TokenType t)
@@ -78,8 +78,9 @@ long interp_id(Interpreter* self)
 	const char* name = t.u1.id->buffer;
 
 	if(strcmp(name, "exit") == 0) {
-		/* TODO Use setjmp here and signal a return to event loop branch */
-		exit(EXIT_SUCCESS);	
+		cg.cg_exception_message = "Success";
+		cg.cg_exception_status = E_NO_ERROR;
+		longjmp(cg.cg_state, 1);
 	}
 
 	Object* value = mapSearch(self->symtab, name);
@@ -111,6 +112,8 @@ long interp_factor(Interpreter* self)
 		return interp_id(self);	
 	} else {
 		interp_error(self, E_FATAL, "unexpected token %s", token_str(t.type));
+		/* NOT REACHED */
+		return -LONG_MAX;
 	}
 }
 

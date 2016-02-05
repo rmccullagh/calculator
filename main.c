@@ -6,7 +6,7 @@
 #include "interp.h"
 #include "lexer.h"
 
-jmp_buf main_loop;
+compiler_globals cg = {0};
 
 static int raw_input(const char* prompt, char* buffer, size_t buffer_size)
 {
@@ -36,22 +36,48 @@ static int raw_input(const char* prompt, char* buffer, size_t buffer_size)
 
 int main(int argc, char** argv)
 {
+	cg.cg_exception_message = NULL;
 
-	while(1) {
-		char buffer[80];
-		size_t bytes_read = raw_input("calc> ", buffer, sizeof(buffer));
-		if(!bytes_read) {
-			printf("\n");
-			continue;
-		} else {	
-			Lexer lex;
-			lexer_init(&lex, buffer, bytes_read);	
-			Interpreter interpreter;
-			interp_init(&interpreter, &lex);
-			long result = interp_expr(&interpreter);
-			printf("%ld\n", result);
+	Event_Loop:
+
+	if(setjmp(cg.cg_state)) {
+		switch(cg.cg_exception_status) {
+			case E_NOTICE:
+				fprintf(stderr, "Notice: %s\n", cg.cg_exception_message);
+			break;
+			case E_WARNING:
+				fprintf(stderr, "Warning: %s\n", cg.cg_exception_message);
+			break;
+			case E_FATAL:
+				fprintf(stderr, "Fatal: %s\n", cg.cg_exception_message);
+				return 1;
+			break;
+			case E_NO_ERROR:
+				fprintf(stderr, "%s\n", cg.cg_exception_message);
+				return 0;
+			break;
+			default :
+				fprintf(stderr, "%s\n", cg.cg_exception_message);
+			break;	
+		}
+		goto Event_Loop;
+	} else {
+		while(1) {
+			char buffer[80];
+			size_t bytes_read = raw_input("calc> ", buffer, sizeof(buffer));
+			if(!bytes_read) {
+				printf("\n");
+				continue;
+			} else {	
+				Lexer lex;
+				lexer_init(&lex, buffer, bytes_read);	
+				Interpreter interpreter;
+				interp_init(&interpreter, &lex);
+				long result = interp_expr(&interpreter);
+				printf("%ld\n", result);
+			}
 		}
 	}
-	
+
 	return 0;
 }
