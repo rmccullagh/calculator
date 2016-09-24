@@ -177,7 +177,9 @@ long interp_expr(Interpreter* self)
 		} else if(t.type == T_MINUS) {
 			interp_eat(self, T_MINUS);
 			result = result - interp_term(self);
-		}
+		} else {
+                    interp_error(self, E_FATAL, "Unexpected token!");
+                }
 	}
 
 	return result;

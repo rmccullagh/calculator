@@ -29,7 +29,10 @@ void token_init(Token* self, TokenType t)
 
 const char* token_str(TokenType t)
 {
-	return token_symbol[t];
+    if(t < sizeof(token_symbol) / sizeof(token_symbol[0])) 	
+    return token_symbol[t];
+
+    return "";
 }
 
 
